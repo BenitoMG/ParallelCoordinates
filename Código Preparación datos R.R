@@ -1,7 +1,7 @@
 ####################################################################################
 # Autor: 	Benito Martín Gassol
 
-# Introducción: éste código ha sido desarrollado como parte del TFM en la
+# Introducción: este código ha sido desarrollado como parte del TFM en la
 # Universidad Internacional de la Rioja para la visualización de Coordenadas
 # Paralelas.
 
