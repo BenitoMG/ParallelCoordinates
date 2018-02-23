@@ -1,0 +1,49 @@
+/*
+####################################################################################
+Autor: 	Benito Martín Gassol
+Introducción: éste código ha sido desarrollado como parte del TFM en la
+Universidad Internacional de la Rioja para la visualización de Coordenadas
+Paralelas.
+
+Objetivo: el objetivo del código es la visualización de los datos exportados
+en el código R de preparación de datos.
+
+
+####################################################################################
+*/
+body {   
+	font-family: Calibri;
+}
+button {
+    margin: 10px 10px 10px 10px;
+    background-color: DodgerBlue;
+    border: 4px solid SkyBlue;
+    border-top: 1px solid #eee;
+    border-left: 1px solid #eee;
+    font-size: 20px;
+    line-height: 200%;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+}
+.title {
+	font: 200% Calibri bold;
+}
+.eje_titulo{
+			font:150% calibri bold;
+}		
+.eje {
+		  font-family: calibri;
+		  font-size: 120%;
+}
+.eje path,
+.eje line {
+		  fill: black;
+		  stroke: #000;
+		  <!--shape-rendering: crispEdges;-->
+		  stroke-width: 100px;
+}
+		
+	
+

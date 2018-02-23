@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!--
+####################################################################################
+Autor: 	Benito Martín Gassol
+Introducción: éste código ha sido desarrollado como parte del TFM en la
+Universidad Internacional de la Rioja para la visualización de Coordenadas
+Paralelas.
+
+Objetivo: el objetivo del código es la visualización de los datos exportados
+en el código R de preparación de datos.
+
+
+####################################################################################
+-->
+
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="http://localhost/UNIR_TFM_2017/BMG_style.css">
+	<script language="javascript" type="text/javascript" src="http://localhost/js/d3.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/d3.layout.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/d3.v3.min.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/d3.tip.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/topojson.v1.min.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/datamaps.world.min_v2.js" charset="utf-8"></script>
+	<script language="javascript" type="text/javascript" src="http://localhost/js/d3.legend.js" charset="utf-8"></script>
+
+	
+	
+	<script language="javascript" type="text/javascript">
+	
+		<!-- INICIALIZACION	DE VARIABLES Y FUNCIONES			-->
+		
+		var categorizacion = "Percentiles";
+		var dataset = [];
+		var color_var = [];
+		var count_var = [];
+		var max = [];
+		var min = [];
+		var	n_var = 0;
+		var margin;
+		var yScale;
+		
+		longitud = function(obj) {
+			var size = 0, key;
+			for (key in obj) {
+				if (obj.hasOwnProperty(key)) size++;
+			}
+			return size;
+		};
+		
+		
+
+
+		<!-- FUNCION PARA REPRESENTAR LOS DATOS		-->
+		/* Esta función llama al resto de funciones definidas a continuación */
+		function dibujar(){
+			
+			d3.selectAll("line").remove();
+			d3.selectAll("path").remove();
+			d3.selectAll("text").remove();
+			
+			if (categorizacion == "Percentiles") {
+				categorizacion = "Rango"
+				datos_cat = "rang"
+				}
+			else {categorizacion = "Percentiles"
+				 datos_cat = "perc"
+			};
+		
+			
+			d3.select(".title").text("Gráfico de Coordenadas Paralelas categorización por "+categorizacion);
+		
+			d3.csv("http://localhost/UNIR_TFM_2017/datos_"+datos_cat+"6.csv", function(data){
+				dataset = data.map(function(d,i){
+					if (i == 0){n_var = longitud(d);};
+					d.Tarifa = +d.Tarifa;
+					d.Minutos = +d.Minutos;
+					d.Antiguedad = +d.Antiguedad;
+					d.Paro = +d.Paro;
+					d.Renta = +d.Renta;
+					console.log("lectura");
+					return d;});
+				
+				d3.csv("http://localhost/UNIR_TFM_2017/color_"+datos_cat+"5.csv", function(data){
+					color_var = data.map(function(d,i){return +d.x;});
+				
+					d3.csv("http://localhost/UNIR_TFM_2017/recuento_"+datos_cat+"5.csv", function(data){
+						count_var = data.map(function(d,i){return +d.x;});
+						
+						ejes(dataset,color_var,count_var);
+						lineas(dataset,color_var,count_var);
+						ejes(dataset,color_var,count_var);
+					});
+				
+				});
+
+
+			});
+
+		};
+		
+		
+		/* Definición y representación de los ejes */
+
+		function ejes(dataset,color_var,count_var){
+			
+			var svgContainer = d3.select("#CP");
+
+			var ancho = parseInt(svgContainer.style("width"));
+			var alto = parseInt(svgContainer.style("height"));
+			
+			var ancho_ejes = ancho*0.90;
+			var alto_ejes = alto*0.80;
+			margin = {top: 0.10*alto, bottom:0.1*alto, left:0.05*ancho, right:0.05*ancho};
+			
+
+			yScale = [];
+			acumulado = [];
+			
+			xPosition = d3.scale.linear()
+						  .range([0,ancho_ejes])
+						  .domain([0,n_var-1]);
+
+			svgContainer.selectAll(".eje").remove();
+
+			for (j = 0; j < n_var; j++) {
+				
+				var nombre = Object.keys(dataset[0])[j];
+						
+				max[j] = d3.max(dataset, function(d){return +d[nombre];});
+				min[j] = d3.min(dataset, function(d){return +d[nombre];});
+
+			
+				yScale[j] = d3.scale.linear()
+					 .range([alto_ejes,0])
+					 .domain([min[j],max[j]]);
+					 
+				acumulado[j] = Array(100).fill(0);
+				var yAxis = d3.svg.axis()
+						.scale(yScale[j])
+						.ticks(max[j])
+						.orient('left')
+						.tickFormat(d3.format("d"))
+						.tickSubdivide(false)
+				
+				svgContainer.append("g")
+							.attr("id","var"+(j+1))
+							.attr("class","eje")
+							.attr("transform","translate("+(margin.left + xPosition(j))+","+margin.top+")").call(yAxis);
+							
+				svgContainer.append("text").attr("class","eje_titulo").attr("x",margin.left + xPosition(j) - 30).attr("y",margin.top/2).text(nombre);
+			
+			};
+
+			ejes_dibujados = 1;
+		};
+		
+		
+		/* Definición y representación de las líneas */
+		function lineas(data,color_var,count_var){
+
+			j = 0;
+			var count_scale = d3.scale.linear().range([1,10]).domain([d3.min(count_var),d3.max(count_var)]);
+
+			var color_scale = d3.scale.linear().domain([d3.min(color_var),d3.max(color_var)])
+				.range(["steelblue", "Red"]);
+			
+			var svgContainer = d3.select("#CP");
+			
+			var lineFunction = d3.svg.line()
+                         .x(function(d) { return d.x; })
+                         .y(function(d) { return d.y; })
+                         .interpolate("linear");
+			
+			var lineas = [];
+			
+			while (data[j] != undefined){
+				lineData = [];
+				var d = Object.values(data[j]);
+				for (i = 0; i < n_var; i++){
+					x = margin.left + xPosition(i);
+					y = margin.top + yScale[i](d[i]);										
+					lineData[i] = {"x": x, "y": y};
+				};
+			
+				lineas[j] = lineFunction(lineData);
+
+				j++;
+			}
+
+			var lineGraph = svgContainer.selectAll(".registro")
+										.data(lineas)
+			
+			
+			lineGraph.enter()
+					 .append("path")
+	                 .attr("d", function(d){return d;})
+					 .attr("class","registro")
+                     .attr("stroke", function(d,i) {return color_scale(color_var[i]);})
+                     .attr("stroke-width", function(d,i){return count_scale(count_var[1]);})
+                     .attr("fill", "none");
+			
+			lineGraph.exit().remove();
+		
+				
+
+		};
+		
+		
+		
+		
+  </script>
+
+
+</head>
+
+<body onload = "dibujar();" style="height:100%">
+	<button onclick="dibujar()">Categorización Rango/Percentiles</button>
+	<div style="width:75%;height:750px">
+		<div style="width:100%;height:10%;"><p align = "center" class="title" style="color:DodgerBlue"></p>
+		</div>
+		<div id= "canvas" style="width:100%;height:90%;">
+			<svg id= "CP"  style="width:100%;height:100%;"></svg>
+		</div>
+	</div>
+
+
+</body>
+
+</html>
